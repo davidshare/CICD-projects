@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   jenkins:
     image: jenkins/jenkins:lts
@@ -7,9 +9,29 @@ services:
       - 8080:8080
       - 50000:50000
     container_name: jenkins
+    environment:
+      DOCKER_TLS_CERTDIR: /certs
     volumes:
-      - ./jenkins_home:/var/jenkins_home
-      - ./var/run/docker.sock:var/run/docker.sock
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client
+    networks:
+      - jenkins
+
+  dind:
+    image: docker:dind
+    container_name: jenkins-docker
+    privileged: true
+    ports:
+      - 2376:2376
+    volumes:
+      - jenkins-docker-certs:/certs/client
+    networks:
+      - jenkins
 
 networks:
-  - jenkins
+  jenkins:
+    driver: bridge
+
+volumes:
+  jenkins-data:
+  jenkins-docker-certs:
